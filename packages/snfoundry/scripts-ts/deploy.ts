@@ -42,6 +42,20 @@ import { green } from "./helpers/colorize-log";
  * @returns {Promise<void>}
  */
 const deployScript = async (): Promise<void> => {
+  const { address: killSwitchAddress } = await deployContract({
+    contract: "KillSwitch",
+    constructorArgs: {
+      is_active: false,
+    },
+  });
+  await deployContract({
+    contract: "CounterContract",
+    constructorArgs: {
+      initial_value: 15,
+      kill_switch: killSwitchAddress,
+      initial_owner: deployer.address,
+    },
+  });
   await deployContract({
     contract: "YourContract",
     constructorArgs: {

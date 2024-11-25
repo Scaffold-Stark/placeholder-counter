@@ -2,6 +2,7 @@
 pub trait IYourContract<TContractState> {
     fn greeting(self: @TContractState) -> ByteArray;
     fn set_greeting(ref self: TContractState, new_greeting: ByteArray, amount_eth: u256);
+    fn set_greeting_without_premium(ref self: TContractState, new_greeting: ByteArray);
     fn withdraw(ref self: TContractState);
     fn premium(self: @TContractState) -> bool;
 }
@@ -89,6 +90,9 @@ mod YourContract {
                         value: 100
                     }
                 );
+        }
+        fn set_greeting_without_premium(ref self: ContractState, new_greeting: ByteArray) {
+            self.greeting.write(new_greeting);
         }
         fn withdraw(ref self: ContractState) {
             self.ownable.assert_only_owner();
