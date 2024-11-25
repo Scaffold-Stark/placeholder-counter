@@ -6,85 +6,31 @@ import { Address } from "~~/components/scaffold-stark";
 import { useAccount } from "~~/hooks/useAccount";
 import { Address as AddressType } from "@starknet-react/chains";
 import Image from "next/image";
-import {
-  useAutoConnect,
-  useDeployedContractInfo,
-} from "~~/hooks/scaffold-stark";
-import { useBlockNumber, useConnect } from "@starknet-react/core";
+import { useConnect } from "@starknet-react/core";
 import { CustomConnectButton } from "~~/components/scaffold-stark/CustomConnectButton";
 import { useState } from "react";
-import { useScaffoldReadContract } from "~~/hooks/scaffold-stark/useScaffoldReadContract";
-import { useScaffoldEventHistory } from "~~/hooks/scaffold-stark/useScaffoldEventHistory";
-import { BlockTag } from "starknet";
-import { useScaffoldMultiWriteContract } from "~~/hooks/scaffold-stark/useScaffoldMultiWriteContract";
-import { useScaffoldWriteContract } from "~~/hooks/scaffold-stark/useScaffoldWriteContract";
 
 const Home: NextPage = () => {
   const { address: connectedAddress } = useAccount();
   const { connect } = useConnect();
-  const [isLoading, setIsLoading] = useState(true);
+
+  // Simple state management for demo
+  const [isKillSwitchActive, setIsKillSwitchActive] = useState(false);
+  const [counterValue, setCounterValue] = useState(0n);
+  const [lastIncreasedBy, setLastIncreasedBy] = useState("0x0");
+  const [lastPremium, setLastPremium] = useState(0n);
   const [inputAmount, setInputAmount] = useState(0n);
+  const [events, setEvents] = useState([
+    {
+      args: {
+        value: 0n,
+        caller: "0x0",
+        premium: 0n,
+      },
+    },
+  ]);
 
-  // scaffold-stark-hooks DEMO
-  const { data: isKillSwitchActive } = useScaffoldReadContract({
-    contractName: "KillSwitch",
-    functionName: "is_active",
-  });
-
-  const { data: counterValue } = useScaffoldReadContract({
-    contractName: "CounterContract",
-    functionName: "get_counter",
-  });
-
-  const { data: lastIncreasedBy } = useScaffoldReadContract({
-    contractName: "CounterContract",
-    functionName: "get_last_increase_by",
-  });
-
-  const { data: lastPremium } = useScaffoldReadContract({
-    contractName: "CounterContract",
-    functionName: "get_last_premium",
-  });
-
-  const { data: lastBlock } = useBlockNumber({
-    blockIdentifier: "pending" as BlockTag,
-  });
-
-  const { data: events } = useScaffoldEventHistory({
-    contractName: "CounterContract",
-    eventName: "contracts::CounterContract::CounterContract::CounterIncreased",
-    fromBlock:
-      lastBlock && lastBlock > BigInt(200)
-        ? BigInt(lastBlock) - BigInt(200)
-        : BigInt(0),
-    watch: true,
-  });
-
-  const { sendAsync: increaseCounter } = useScaffoldWriteContract({
-    contractName: "CounterContract",
-    functionName: "increase_counter_with_premium",
-    args: [inputAmount],
-  });
-
-  const { data: CounterContract } = useDeployedContractInfo("CounterContract");
-
-  const { sendAsync: increaseCounterWithPremium } =
-    useScaffoldMultiWriteContract({
-      calls: [
-        {
-          contractName: "Eth",
-          functionName: "approve",
-          args: [CounterContract?.address, inputAmount],
-        },
-        {
-          contractName: "CounterContract",
-          functionName: "increase_counter_with_premium",
-          args: [inputAmount],
-        },
-      ],
-    });
-
-  // scaffold-stark-hooks END of DEMO
+  // Placeholder functions to be replaced with hooks
 
   return (
     <>
@@ -130,26 +76,16 @@ const Home: NextPage = () => {
                 <div className="flex flex-col gap-2">
                   <p className="font-medium">
                     Current Counter Value:{" "}
-                    <span className="text-xl">
-                      {Number(BigInt((counterValue as any) || 0))}
-                    </span>
+                    <span className="text-xl">{Number(counterValue)}</span>
                   </p>
                   <div className="text-sm opacity-70">
                     <p>
                       Last increased by:{" "}
-                      <Address
-                        address={`0x${BigInt((lastIncreasedBy as any) || 0).toString(16)}`}
-                      />
+                      <Address address={lastIncreasedBy as AddressType} />
                     </p>
                     <p>
                       Last Amount paid:{" "}
-                      {lastPremium
-                        ? (
-                            Number(BigInt((lastPremium as any) || 0)) /
-                            10 ** 18
-                          ).toFixed(5)
-                        : "0.00000"}{" "}
-                      ETH
+                      {(Number(lastPremium) / 10 ** 18).toFixed(5)} ETH
                     </p>
                   </div>
                 </div>
@@ -188,32 +124,32 @@ const Home: NextPage = () => {
                   <div className="bg-base-200 p-4 rounded-lg">
                     <p className="font-medium mb-2">Select Premium Amount</p>
                     <div className="flex flex-wrap gap-2">
-                      <button 
-                        className={`btn btn-sm ${inputAmount === 10000000000000000n ? 'btn-primary' : 'btn-outline'}`}
-                        onClick={() => setInputAmount(10000000000000000n)} // 0.01 ETH
+                      <button
+                        className={`btn btn-sm ${inputAmount === 10000000000000000n ? "btn-primary" : "btn-outline"}`}
+                        onClick={() => setInputAmount(10000000000000000n)}
                       >
                         0.01 ETH
                       </button>
                       <button
-                        className={`btn btn-sm ${inputAmount === 1000000000000000n ? 'btn-primary' : 'btn-outline'}`}
-                        onClick={() => setInputAmount(1000000000000000n)} // 0.001 ETH
+                        className={`btn btn-sm ${inputAmount === 1000000000000000n ? "btn-primary" : "btn-outline"}`}
+                        onClick={() => setInputAmount(1000000000000000n)}
                       >
                         0.001 ETH
                       </button>
                       <button
-                        className={`btn btn-sm ${inputAmount === 100000000000000n ? 'btn-primary' : 'btn-outline'}`}
-                        onClick={() => setInputAmount(100000000000000n)} // 0.0001 ETH
+                        className={`btn btn-sm ${inputAmount === 100000000000000n ? "btn-primary" : "btn-outline"}`}
+                        onClick={() => setInputAmount(100000000000000n)}
                       >
                         0.0001 ETH
                       </button>
                       <button
-                        className={`btn btn-sm ${inputAmount === 10000000000000n ? 'btn-primary' : 'btn-outline'}`}
-                        onClick={() => setInputAmount(10000000000000n)} // 0.00001 ETH
+                        className={`btn btn-sm ${inputAmount === 10000000000000n ? "btn-primary" : "btn-outline"}`}
+                        onClick={() => setInputAmount(10000000000000n)}
                       >
                         0.00001 ETH
                       </button>
                       <button
-                        className={`btn btn-sm ${inputAmount === 0n ? 'btn-primary' : 'btn-outline'}`}
+                        className={`btn btn-sm ${inputAmount === 0n ? "btn-primary" : "btn-outline"}`}
                         onClick={() => setInputAmount(0n)}
                       >
                         No Premium
@@ -225,13 +161,16 @@ const Home: NextPage = () => {
                     className="btn btn-primary w-full mt-4"
                     onClick={async () => {
                       if (inputAmount > 0) {
-                        await increaseCounterWithPremium();
+                        // await increaseCounterWithPremium();
                       } else {
-                        await increaseCounter();
+                        // await increaseCounter();
                       }
                     }}
                   >
-                    Increase Counter {inputAmount > 0 ? `with ${Number(inputAmount) / 10**18} ETH` : 'without Premium'}
+                    Increase Counter{" "}
+                    {inputAmount > 0
+                      ? `with ${Number(inputAmount) / 10 ** 18} ETH`
+                      : "without Premium"}
                   </button>
                 </>
               ) : (
